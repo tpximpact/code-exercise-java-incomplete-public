@@ -10,25 +10,22 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 @Service
 public class UrlShortenerService {
 
-    private static final String ALIAS_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    private static final int GENERATED_ALIAS_LENGTH = 7;
-
     private final ShortenedUrlRepository repository;
+    private final AliasGenerator aliasGenerator;
 
-    public UrlShortenerService(ShortenedUrlRepository repository) {
+    public UrlShortenerService(ShortenedUrlRepository repository, AliasGenerator aliasGenerator) {
         this.repository = repository;
+        this.aliasGenerator = aliasGenerator;
     }
 
     public ShortenUrlResponse shorten(ShortenUrlRequest request, String baseUrl) {
         var fullUrl = normalizeUrl(request.getFullUrl());
         var alias = request.getCustomAlias() == null || request.getCustomAlias().isBlank()
-                ? generateAlias()
+                ? aliasGenerator.generate()
                 : request.getCustomAlias().trim();
 
         if (!isValidAlias(alias)) {
@@ -64,11 +61,6 @@ public class UrlShortenerService {
         return true;
     }
 
-    private static String generateAlias() {
-        // TODO: Implement alias generation.
-        return "";
-    }
-
     private static boolean isValidAlias(String alias) {
         if (alias == null || alias.length() < 2 || alias.length() > 64) {
             return false;
@@ -92,17 +84,12 @@ public class UrlShortenerService {
                 throw new IllegalArgumentException("fullUrl must be a valid URL.");
             }
 
-            var path = uri.getPath();
-            if (path == null || path.isBlank()) {
-                path = "/";
-            }
-
             return new URI(
                     uri.getScheme(),
                     uri.getUserInfo(),
                     uri.getHost(),
                     uri.getPort(),
-                    path,
+                    uri.getPath(),
                     uri.getQuery(),
                     uri.getFragment()
             ).toString();

@@ -123,14 +123,18 @@ class UrlsControllerIntegrationTests {
 
     @Test
     void delete_ExistingAlias_Returns204() {
-        var response = restTemplate.exchange(
+        var deleteResponse = restTemplate.exchange(
                 "/redir",
                 HttpMethod.DELETE,
                 null,
                 Void.class
         );
 
-        assertThat(response.getStatusCode()).isEqualTo(NO_CONTENT);
+        assertThat(deleteResponse.getStatusCode()).isEqualTo(NO_CONTENT);
+
+        var getResponse = restTemplate.getForEntity("/redir", String.class);
+
+        assertThat(getResponse.getStatusCode()).isEqualTo(NOT_FOUND);
     }
 
     @Test

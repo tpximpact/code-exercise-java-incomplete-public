@@ -25,16 +25,8 @@ public class UrlShortenerService {
     public ShortenUrlResponse shorten(ShortenUrlRequest request, String baseUrl) {
         var fullUrl = normalizeUrl(request.getFullUrl());
         var alias = request.getCustomAlias() == null || request.getCustomAlias().isBlank()
-                ? aliasGenerator.generate()
-                : request.getCustomAlias().trim();
-
-        if (!isValidAlias(alias)) {
-            throw new IllegalArgumentException("Alias may only contain letters, numbers, and hyphens (2–64 characters).");
-        }
-
-        if (repository.existsByAlias(alias)) {
-            throw new IllegalStateException("The alias '" + alias + "' is already taken.");
-        }
+                ? generateAlias()
+                : validateThenReturnCustomAlias(request.getCustomAlias().trim());
 
         repository.save(alias, fullUrl, Instant.now());
 
@@ -56,6 +48,32 @@ public class UrlShortenerService {
         }
 
         return repository.deleteByAlias(alias);
+    }
+
+    private String generateAlias() {
+        for (int i = 0; i < 5; i++) {
+            String alias = aliasGenerator.generate();
+            if (aliasAvailable(alias)) {
+                return alias;
+            }
+        }
+
+        throw new IllegalStateException("Unable to generate a unique alias.");
+    }
+
+    private String validateThenReturnCustomAlias(String alias) {
+        if (!isValidAlias(alias)) {
+            throw new IllegalArgumentException("Alias may only contain letters, numbers, and hyphens (2–64 characters).");
+        }
+
+        if (!aliasAvailable(alias)) {
+            throw new IllegalStateException("The alias '" + alias + "' is already taken.");
+        }
+        return alias;
+    }
+
+    private boolean aliasAvailable(String alias) {
+        return !repository.existsByAlias(alias);
     }
 
     private static boolean isValidAlias(String alias) {

@@ -42,11 +42,6 @@ public class UrlShortenerService {
     }
 
     public boolean delete(String alias) {
-        var fullUrl = repository.findFullUrlByAlias(alias).orElse(null);
-        if (fullUrl == null) {
-            return false;
-        }
-
         return repository.deleteByAlias(alias);
     }
 

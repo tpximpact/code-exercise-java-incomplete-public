@@ -77,10 +77,10 @@ class UrlsControllerIntegrationTests {
     }
 
     @Test
-    void postShorten_MalformedAlias_Returns400() {
+    void postShorten_BadRequest_Returns400() {
         var req = new ShortenUrlRequest();
         req.setFullUrl("https://www.example.com/");
-        req.setCustomAlias("m a l f o r m e d - a l i a s");
+        req.setCustomAlias("invalid alias");
 
         ResponseEntity<Map<String, String>> response = restTemplate.exchange(
                 "/shorten",
@@ -93,7 +93,7 @@ class UrlsControllerIntegrationTests {
     }
 
     @Test
-    void getAll_ReturnsUrlList() {
+    void getAll_Returns200WithUrlList() {
         ResponseEntity<List<UrlListItem>> response = restTemplate.exchange(
                 "/urls",
                 HttpMethod.GET,
@@ -102,8 +102,10 @@ class UrlsControllerIntegrationTests {
         );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertFalse(response.getBody().isEmpty());
+        assertThat(response.getStatusCode()).isEqualTo(OK);
+        assertThat(response.getBody())
+                .isNotNull()
+                .anyMatch(item -> item.getAlias().equals("redir"));
     }
 
     @Test

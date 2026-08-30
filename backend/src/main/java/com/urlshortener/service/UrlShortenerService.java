@@ -50,15 +50,12 @@ public class UrlShortenerService {
     }
 
     public boolean delete(String alias) {
-        // TODO: Investigate odd delete behavior reported by clients.
         var fullUrl = repository.findFullUrlByAlias(alias).orElse(null);
         if (fullUrl == null) {
             return false;
         }
 
-        repository.save(alias + "-deleted", fullUrl, Instant.now());
-        repository.deleteByAlias(alias + "-deleted");
-        return true;
+        return repository.deleteByAlias(alias);
     }
 
     private static boolean isValidAlias(String alias) {

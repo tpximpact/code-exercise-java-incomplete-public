@@ -4,8 +4,18 @@ import { ResultBanner } from './components/ResultBanner';
 import { UrlTable } from './components/UrlTable';
 
 export default function App() {
-  const { urls, loading, error, lastCreated, shorten, deleteUrl, clearLastCreated } =
-    useUrlShortener();
+  const {
+    urls,
+    loading,
+    error,
+    lastCreated,
+    page,
+    totalPages,
+    shorten,
+    deleteUrl,
+    goToPage,
+    clearLastCreated,
+  } = useUrlShortener();
 
   return (
     <div className="app">
@@ -50,7 +60,31 @@ export default function App() {
               Loading…
             </div>
           ) : (
-            <UrlTable urls={urls} onDelete={deleteUrl} />
+            <>
+              <UrlTable urls={urls} onDelete={deleteUrl} />
+
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button
+                    disabled={page === 0}
+                    onClick={() => goToPage(page - 1)}
+                  >
+                    Previous
+                  </button>
+
+                  <span>
+                    Page {page + 1} of {totalPages}
+                  </span>
+
+                  <button
+                    disabled={page >= totalPages - 1}
+                    onClick={() => goToPage(page + 1)}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </section>
       </main>

@@ -47,19 +47,13 @@ class UrlsControllerIntegrationTests {
     @BeforeEach
     void setUp() {
         jdbcTemplate.execute("DELETE FROM shortened_urls");
-        jdbcTemplate.update(
-                "INSERT INTO shortened_urls (alias, full_url, created_at) VALUES (?, ?, ?)",
-                "redir",
-                "https://target.com/",
-                Instant.now().toString()
-        );
     }
 
     @Test
     void postShorten_ValidCustomAlias_Returns201WithShortenUrlResponse() {
         var req = new ShortenUrlRequest();
-        req.setFullUrl("https://www.example.com/");
-        req.setCustomAlias("example");
+        req.setFullUrl("https://www.target.com/");
+        req.setCustomAlias("redir");
 
         ResponseEntity<ShortenUrlResponse> response = restTemplate.exchange(
                 "/shorten",
@@ -69,9 +63,9 @@ class UrlsControllerIntegrationTests {
         );
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("example", response.getBody().getAlias());
+        assertEquals("redir", response.getBody().getAlias());
         assertEquals(
-                LOCAL_HOST + PORT + "/example",
+                LOCAL_HOST + PORT + "/redir",
                 response.getBody().getShortUrl()
         );
     }
@@ -79,7 +73,7 @@ class UrlsControllerIntegrationTests {
     @Test
     void postShorten_BadRequest_Returns400() {
         var req = new ShortenUrlRequest();
-        req.setFullUrl("https://www.example.com/");
+        req.setFullUrl("https://www.target.com/");
         req.setCustomAlias("invalid alias");
 
         ResponseEntity<Map<String, String>> response = restTemplate.exchange(
@@ -93,7 +87,11 @@ class UrlsControllerIntegrationTests {
     }
 
     @Test
-    void getAll_Returns200WithUrlList() {
+    void getAll_Returns200WithSortedUrlList() {
+        insertUrl("old", "https://old.com/", "2026-08-31T10:00:00Z");
+        insertUrl("middle", "https://middle.com/", "2026-08-31T11:00:00Z");
+        insertUrl("new", "https://new.com/", "2026-08-31T12:00:00Z");
+
         ResponseEntity<List<UrlListItem>> response = restTemplate.exchange(
                 "/urls",
                 HttpMethod.GET,
@@ -101,15 +99,17 @@ class UrlsControllerIntegrationTests {
                 new ParameterizedTypeReference<>() {}
         );
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertThat(response.getStatusCode()).isEqualTo(OK);
         assertThat(response.getBody())
                 .isNotNull()
-                .anyMatch(item -> item.getAlias().equals("redir"));
+                .extracting(UrlListItem::getAlias)
+                .containsExactly("new", "middle", "old");
     }
 
     @Test
     void getRedirectToUrl_ExistingAlias_Returns302WithLocation() {
+        insertUrl("redir", "https://target.com/", "2026-08-31T14:00:00Z");
+
         var response = restTemplate.getForEntity("/redir", String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(FOUND);
@@ -125,6 +125,8 @@ class UrlsControllerIntegrationTests {
 
     @Test
     void delete_ExistingAlias_Returns204() {
+        insertUrl("redir", "https://target.com/", "2026-08-31T14:00:00Z");
+
         var deleteResponse = restTemplate.exchange(
                 "/redir",
                 HttpMethod.DELETE,
@@ -149,5 +151,14 @@ class UrlsControllerIntegrationTests {
         );
 
         assertThat(response.getStatusCode()).isEqualTo(NOT_FOUND);
+    }
+
+    private void insertUrl(String alias, String fullUrl, String createdAt) {
+        jdbcTemplate.update(
+                "INSERT INTO shortened_urls (alias, full_url, created_at) VALUES (?, ?, ?)",
+                alias,
+                fullUrl,
+                createdAt
+        );
     }
 }

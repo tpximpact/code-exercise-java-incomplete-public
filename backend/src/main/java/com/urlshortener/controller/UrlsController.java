@@ -1,24 +1,22 @@
 package com.urlshortener.controller;
 
+import com.urlshortener.model.AllUrlsResponse;
 import com.urlshortener.model.ShortenUrlRequest;
 import com.urlshortener.model.ShortenUrlResponse;
-import com.urlshortener.model.UrlListItem;
 import com.urlshortener.service.UrlShortenerService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
+@Validated
 @org.springframework.web.bind.annotation.CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
 public class UrlsController {
 
@@ -41,9 +39,17 @@ public class UrlsController {
     }
 
     @GetMapping("/urls")
-    public List<UrlListItem> getAll(HttpServletRequest requestContext) {
+    public AllUrlsResponse getAll(
+            @RequestParam(defaultValue = "0")
+            @Min(value = 0, message = "Page must be 0 or greater.")
+            int page,
+            @RequestParam(defaultValue = "5")
+            @Min(value = 1, message = "Size must be at least 1.")
+            @Max(value = 100, message = "Size must not exceed 100.")
+            int size,
+            HttpServletRequest requestContext) {
         var baseUrl = getBaseUrl(requestContext);
-        return service.getAll(baseUrl);
+        return service.getAll(baseUrl, page, size);
     }
 
     @GetMapping("/{alias}")

@@ -1,5 +1,6 @@
 package com.urlshortener;
 
+import com.urlshortener.model.AllUrlsResponse;
 import com.urlshortener.model.ShortenUrlRequest;
 import com.urlshortener.model.ShortenUrlResponse;
 import com.urlshortener.model.UrlListItem;
@@ -87,23 +88,72 @@ class UrlsControllerIntegrationTests {
     }
 
     @Test
-    void getAll_Returns200WithSortedUrlList() {
+    void getAll_Returns200WithSortedUrlListAndPagination() {
         insertUrl("old", "https://old.com/", "2026-08-31T10:00:00Z");
         insertUrl("middle", "https://middle.com/", "2026-08-31T11:00:00Z");
         insertUrl("new", "https://new.com/", "2026-08-31T12:00:00Z");
 
-        ResponseEntity<List<UrlListItem>> response = restTemplate.exchange(
-                "/urls",
+        ResponseEntity<AllUrlsResponse> response = restTemplate.exchange(
+                "/urls?page=0&size=2",
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<>() {}
+                AllUrlsResponse.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(OK);
-        assertThat(response.getBody())
-                .isNotNull()
+
+        var body = response.getBody();
+        assertThat(body).isNotNull();
+        assertThat(body.urls())
                 .extracting(UrlListItem::getAlias)
-                .containsExactly("new", "middle", "old");
+                .containsExactly("new", "middle");
+
+        assertThat(body.page()).isEqualTo(0);
+        assertThat(body.size()).isEqualTo(2);
+        assertThat(body.totalItems()).isEqualTo(3);
+        assertThat(body.totalPages()).isEqualTo(2);
+    }
+
+    @Test
+    void getAll_NegativePage_Returns400() {
+        var response = restTemplate.exchange(
+                "/urls?page=-1&size=5",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Map<String, String>>() {}
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(BAD_REQUEST);
+        assertThat(response.getBody())
+                .containsEntry("error", "Page must be 0 or greater.");
+    }
+
+    @Test
+    void getAll_InvalidPageSize_Returns400() {
+        var response = restTemplate.exchange(
+                "/urls?page=0&size=0",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Map<String, String>>() {}
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(BAD_REQUEST);
+        assertThat(response.getBody())
+                .containsEntry("error", "Size must be at least 1.");
+    }
+
+    @Test
+    void getAll_PageSizeExceedsMaximum_Returns400() {
+        var response = restTemplate.exchange(
+                "/urls?page=0&size=101",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Map<String, String>>() {}
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(BAD_REQUEST);
+        assertThat(response.getBody())
+                .containsEntry("error", "Size must not exceed 100.");
     }
 
     @Test

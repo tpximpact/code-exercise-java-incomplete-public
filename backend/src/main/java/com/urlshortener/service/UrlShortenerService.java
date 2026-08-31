@@ -1,5 +1,6 @@
 package com.urlshortener.service;
 
+import com.urlshortener.model.AllUrlsResponse;
 import com.urlshortener.model.ShortenUrlRequest;
 import com.urlshortener.model.ShortenUrlResponse;
 import com.urlshortener.model.UrlListItem;
@@ -37,8 +38,12 @@ public class UrlShortenerService {
         return repository.findFullUrlByAlias(alias).orElse(null);
     }
 
-    public List<UrlListItem> getAll(String baseUrl) {
-        return repository.findAll(baseUrl);
+    public AllUrlsResponse getAll(String baseUrl, int page, int size) {
+        int offset = page * size;
+        int totalItems = repository.count();
+        int totalPages = (totalItems + size - 1) / size;
+        List<UrlListItem> urlItems = repository.findAll(baseUrl, offset, size);
+        return new AllUrlsResponse(urlItems, page, size, totalItems,totalPages);
     }
 
     public boolean delete(String alias) {

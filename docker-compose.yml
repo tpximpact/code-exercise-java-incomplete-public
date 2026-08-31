@@ -1,0 +1,17 @@
+services:
+  api:
+    build:
+      context: ./backend
+    volumes:
+      - url-data:/data
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  url-data:

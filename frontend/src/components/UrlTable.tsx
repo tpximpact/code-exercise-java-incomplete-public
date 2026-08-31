@@ -6,13 +6,39 @@ interface UrlTableProps {
 }
 
 export function UrlTable({ urls, onDelete }: UrlTableProps) {
-  // TODO: Build URL table UI and wire delete actions.
-  void urls;
-  void onDelete;
+  if (urls.length === 0) {
+    return <p>No shortened URLs yet.</p>;
+  }
 
   return (
-    <div className="empty-state">
-      <p>TODO: Display shortened URLs here.</p>
-    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Alias</th>
+          <th>Original URL</th>
+          <th>Short URL</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {urls.map((url) => (
+          <tr key={url.alias}>
+            <td>{url.alias}</td>
+            <td>{url.fullUrl}</td>
+            <td>
+              <a href={url.shortUrl}>
+                {url.shortUrl}
+              </a>
+            </td>
+            <td>
+              <button onClick={() => onDelete(url.alias)}>
+                Delete
+              </button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

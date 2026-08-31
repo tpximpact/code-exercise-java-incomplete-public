@@ -1,9 +1,10 @@
-# .NET
+# Java
 backend/**/bin/
 backend/**/obj/
 backend/**/*.db
 backend/**/*.db-shm
 backend/**/*.db-wal
+backend/target/
 
 # Node
 frontend/node_modules/

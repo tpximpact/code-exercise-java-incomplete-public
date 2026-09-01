@@ -63,27 +63,29 @@ export default function App() {
             <>
               <UrlTable urls={urls} onDelete={deleteUrl} />
 
-              {totalPages > 1 && (
-                <div className="pagination">
-                  <button
-                    disabled={page === 0}
-                    onClick={() => goToPage(page - 1)}
-                  >
-                    Previous
-                  </button>
+                {totalPages > 1 && (
+                  <div className="pagination" aria-label="Pagination">
+                    <button
+                      className="btn-ghost pagination__button"
+                      disabled={page === 0}
+                      onClick={() => goToPage(page - 1)}
+                    >
+                      ← Previous
+                    </button>
 
-                  <span>
-                    Page {page + 1} of {totalPages}
-                  </span>
+                    <span className="pagination__status">
+                      Page <strong>{page + 1}</strong> of <strong>{totalPages}</strong>
+                    </span>
 
-                  <button
-                    disabled={page >= totalPages - 1}
-                    onClick={() => goToPage(page + 1)}
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
+                    <button
+                      className="btn-ghost pagination__button"
+                      disabled={page >= totalPages - 1}
+                      onClick={() => goToPage(page + 1)}
+                    >
+                      Next →
+                    </button>
+                  </div>
+                )}
             </>
           )}
         </section>

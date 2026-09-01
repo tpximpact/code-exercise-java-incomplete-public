@@ -65,10 +65,12 @@ public class ShortenedUrlRepository {
     }
 
     public int count() {
-        return jdbc.queryForObject(
+        Integer count = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM shortened_urls",
                 Integer.class
         );
+
+        return count != null ? count : 0;
     }
 
     public boolean deleteByAlias(String alias) {

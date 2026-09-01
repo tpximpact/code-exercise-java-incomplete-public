@@ -6,6 +6,7 @@ import com.urlshortener.model.ShortenUrlResponse;
 import com.urlshortener.model.UrlListItem;
 import com.urlshortener.repository.ShortenedUrlRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,6 +24,7 @@ public class UrlShortenerService {
         this.aliasGenerator = aliasGenerator;
     }
 
+    @Transactional
     public ShortenUrlResponse shorten(ShortenUrlRequest request, String baseUrl) {
         var fullUrl = normalizeUrl(request.getFullUrl());
         var alias = request.getCustomAlias() == null || request.getCustomAlias().isBlank()

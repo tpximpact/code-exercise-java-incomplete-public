@@ -11,6 +11,7 @@ export default function App() {
     lastCreated,
     page,
     totalPages,
+    totalItems,
     shorten,
     deleteUrl,
     goToPage,
@@ -51,7 +52,7 @@ export default function App() {
           <h2 id="list-heading" className="card__title">
             All shortened URLs
             {urls.length > 0 && (
-              <span className="badge">{urls.length}</span>
+              <span className="badge">{totalItems}</span>
             )}
           </h2>
 

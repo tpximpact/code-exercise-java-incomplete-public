@@ -9,6 +9,7 @@ interface UseUrlShortenerReturn {
   lastCreated: ShortenUrlResponse | null;
   page: number;
   totalPages: number;
+  totalItems: number;
   shorten: (fullUrl: string, customAlias?: string) => Promise<void>;
   deleteUrl: (alias: string) => Promise<void>;
   goToPage: (page: number) => Promise<void>;
@@ -25,6 +26,7 @@ export function useUrlShortener(): UseUrlShortenerReturn {
 
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
   const fetchAll = useCallback(async (pageNumber = 0) => {
     setLoading(true);
@@ -36,6 +38,7 @@ export function useUrlShortener(): UseUrlShortenerReturn {
       setUrls(data.urls);
       setPage(data.page);
       setTotalPages(data.totalPages);
+      setTotalItems(data.totalItems);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load URLs.');
     } finally {
@@ -95,6 +98,7 @@ export function useUrlShortener(): UseUrlShortenerReturn {
     lastCreated,
     page,
     totalPages,
+    totalItems,
     shorten,
     deleteUrl,
     goToPage,
